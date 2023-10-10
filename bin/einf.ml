@@ -9,7 +9,7 @@ exception Teq of etype * etype
 exception PubWrong of etype
 
 type et_env = (name * etype) list
-let one = 2.
+let one = 1.
 let zero = 0.
 
 let ef_zero = Emap([])
