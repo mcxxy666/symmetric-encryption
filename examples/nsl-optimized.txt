@@ -1,0 +1,65 @@
+/* nsl-optimized(NSL, avoiding encryption of nonce responses) */
+
+/* Message 1: A -> B : {{msg1(A,Na)}}pkB */
+/* Event 1: B  begins  "b authenticating to a" */
+/* Message 2: B -> A : Na,{{msg2(B,Nb)}}pkA */
+/* Event 2: A  ends    "b authenticating to a" */
+/* Event 3: A  begins  "a authenticating to b" */
+/* Message 3: A -> B : Nb */
+/* Event 4: B  ends    "a authenticating to b" */
+
+
+(news chE)(news chD)
+(
+  /* the process of A */
+
+  *chD??cmsg.
+   split cmsg is (a,dka) in 
+   chE??cmsg2.
+   split cmsg2 is (b,ekb) in 
+   (new nonceA)
+   (net!{{inl((a,nonceA))}}ekb |
+    net?x.
+    split x is (nonceA2,ctext) in
+    decrypt ctext is {{text}}dka in
+    case text is inl(c).O
+              is inr(text2).
+                (match text2 is (b,nonceB2) in
+                 (check nonceA is nonceA2 in
+                  end (b,a) |
+                  begin (a,b).net!nonceB2)
+                 )
+    )
+
+ |
+
+  /* the process of B */
+   
+   *chD??cmsg3.
+    split cmsg3 is (b,dkb) in 
+    chE??cmsg4.
+    split cmsg4 is (a,eka) in 
+    net?ctext2.
+    (new nonceB)
+    decrypt ctext2 is {{text0}}dkb in
+    case text0 is inl(text4).
+                  (match text4 is (a,nonceA2) in
+                    (begin (b,a).
+                     net!(nonceA2,{{inr((b,nonceB))}}eka) |
+                     net?nonceB2.
+                     check nonceB is nonceB2 in
+                     end (a,b))
+                   )
+                             
+                  
+                is inr(d).O
+
+  |
+
+  *(new p)(newAsym ekp,dkp)
+     (*net!p |
+      *chE!!(p,ekp) |
+      *chD!!(p,dkp)
+     )
+
+)

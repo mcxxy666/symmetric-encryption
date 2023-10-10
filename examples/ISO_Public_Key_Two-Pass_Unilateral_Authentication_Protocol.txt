@@ -1,0 +1,32 @@
+/*ISO Public Key Two-Pass Unilateral Authentication Protocol*/
+
+/* Message 1: B -> A   Nb*/
+/* Event 1: A begins (a,(b,msg)) */
+/* Message 2: A -> B  ({{(a,Ka)}}KCA-1,{{(msg,(b,Nb))}}Ka-1)*/
+/* Event 2: B ends (a,(b,msg))*/
+
+
+
+(newAsym ek_CA,dk_CA)
+( 
+  net!dk_CA 
+| 
+  /* the process of A */
+  (
+   (newAsym ek_A,dk_A)(new msg)
+     (net!dk_A | net?nonceB2.begin (a,(b,msg)).net!({{(a,dk_A)}}ek_CA,{{(msg,(b,nonceB2))}}ek_A))
+
+|  
+   /* the process of B */
+   (new nonceB)
+   (net!nonceB |
+    net?rcv.split rcv is (ctext1,ctext2) in 
+    decrypt ctext1 is {{text1}}dk_CA in
+    match text1 is (a,dk_A) in 
+    decrypt ctext2 is {{text2}}dk_A in
+    split text2 is (m,text3) in
+    match text3 is (b,nonceB2) in
+    check nonceB is nonceB2 in end (a,(b,m))
+    )
+  )
+)

@@ -1,0 +1,14 @@
+/* posh */
+
+/* Message 1: B->A  nonce */
+/* Event 1: A begins "msg" */
+/* Message 2: A->B {{(msg,nonce)}}ek_Bob */
+/* Event 2: B ends "msg" */
+
+(newAsym ek_Bob,dk_Bob)
+(net!dk_Bob |
+((new nonce)(net!nonce | ( net?ctext.decrypt ctext is {{text}}dk_Bob in
+       split text is (m,nonce2) in check nonce is nonce2 in end m
+      ))
+| (new msg)(net?nonce.begin msg.net!{{(msg,nonce)}}ek_Bob))
+)

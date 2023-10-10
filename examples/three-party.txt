@@ -1,0 +1,65 @@
+/* three-party agreement protocol */
+
+/* Message 1: A->B    {{(a,n)}}pkB */
+/* Event 1: B begins   b */
+/* Event 2: B begins  (c,1) */
+/* Message 2: B->C    {(a,c,n)}kBC */
+/* Event 3; C begins  (c,2) */
+/* Message 3: C->A    (c,{{n}}skC) */
+/* Event 4: A ends     b */
+/* Event 5: A ends    (c,1) */
+/* Event 6: A ends    (c,2) */
+
+
+(news dbpub)(news db)(newAsym ek_B,dk_B)
+(   net!ek_B 
+ 
+   |
+        /* process of A  */
+
+    (new a)
+    (new non)
+    (net!{{(a,non)}}ek_B |
+     net?x.
+     split x is (c,ctext3) in
+     dbpub??cmsg2.
+     match cmsg2 is (c,dk_C) in
+     decrypt ctext3 is {{non3}}dk_C in 
+     check non is non3 in 
+     (end b | end c | end (c,dummy))
+     )
+
+    |  
+        /* process of B */
+  
+    
+     (new b)(new dummy) 
+     (net?ctext2.
+      decrypt ctext2 is {{text3}}dk_B in
+      split text3 is (a,non2) in
+      db??cmsg.
+      split cmsg is (c,kBC) in
+      begin b.
+      begin (c,dummy).
+      net!{(a,(c,non2))}kBC
+     )      
+
+     |
+        /* process of C */
+
+     *(new c)(newSym kBC)(newAsym ekC,dkC)
+      (*net!dkC |
+       *net!c |
+       *db!!(c,kBC) |
+       *dbpub!!(c,dkC) |
+       *net?ctext.
+        decrypt ctext is {text}kBC in
+        split text is (a,text2) in
+        match text2 is (c,non3) in 
+        begin c.
+        net!(c,{{non3}}ekC)
+       )
+        
+       
+ 
+)

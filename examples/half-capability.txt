@@ -1,0 +1,17 @@
+/* A process that needs a fractional capability */
+ 
+(new c)
+(new d)
+(new x)
+(new y)
+(new z)
+(newSym k)
+(begin x.(c!{y}k|d!{z}k)
+ |
+ c?u.d?v.
+  decrypt u is {y2}k in
+  decrypt v is {z2}k in
+  check y is y2 in
+  check z is z2 in
+  end x
+)

@@ -1,0 +1,75 @@
+/* nsl(Lowe's fix, 3-message version) */
+
+/* Message 1: A -> B : {{msg1(A,Na)}}pkB */
+/* Event 1:  B begins  "b authenticating to a" */
+/* Message 2: B -> A : {{msg2(B,Na,Nb)}}pkA */
+/* Event 2:  A ends    "b authenticating to a" */
+/* Event 3:  A begins  "a authenticating to b" */
+/* Message 3: A -> B : {{msg3(Nb)}}pkB */
+/* Event 4:  B ends    "a authenticating to b" */
+
+
+(news chE)(news chD)
+(
+  /* the process of A */
+
+  *chD??cmsg.
+   split cmsg is (a,dka) in 
+   chE??cmsg2.
+   split cmsg2 is (b,ekb) in 
+   (new nonceA)
+   (net!{{inl(inl((a,nonceA)))}}ekb |
+    net?ctext.
+    decrypt ctext is {{text}}dka in
+    case text is inl(c).O
+              is inr(text2).
+                (match text2 is (b,text3) in
+                 split text3 is (nonceA2,nonceB2) in
+                 (check nonceA is nonceA2 in
+                  end (b,a) |
+                  begin (a,b).net!{{inl(inr(nonceB2))}}ekb)
+                 )
+    )
+
+   |
+     /* the process of B */
+   
+   *chD??cmsg3.
+    split cmsg3 is (b,dkb) in 
+    chE??cmsg4.
+    split cmsg4 is (a,eka) in 
+    net?ctext2.
+    (new nonceB)
+    (new msg)
+    decrypt ctext2 is {{text0}}dkb in
+    case text0 is inl(text4).
+                  (case text4 is inl(text5).
+                                 (match text5 is (a,nonceA2) in
+                                  (begin (b,a).
+                                   net!{{inr((b,(nonceA2,nonceB)))}}eka |
+                                   net?ctext3.
+                                   decrypt ctext3 is {{text6}}dkb in
+                                   case text6 is inl(text7).
+                                                (case text7 is inl(f).O
+                                                            is inr(nonceB2).
+                                                                (check nonceB is nonceB2 in
+                                                                 end (a,b)
+                                                                 )
+                                                 )
+                                              is inr(g).O
+                                   )
+                                  )
+                               is inr(e).O 
+                  )
+                is inr(d).O
+
+    |
+
+    *(new p)(newAsym ekp,dkp)
+     (*net!p |
+      *chE!!(p,ekp) |
+      *chD!!(p,dkp)
+     )
+
+
+)

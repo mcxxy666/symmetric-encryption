@@ -1,0 +1,2 @@
+/* wrong versioin */
+(new x)(newSym k)(begin x.net!{x}k|net?y.decrypt y is {z}k in end x)

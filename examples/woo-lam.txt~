@@ -1,0 +1,55 @@
+/* Woo and Lam's Authentication Protocol */
+
+/* Event 1: A begins "A,B" */
+/* Message 1: A->B  A */
+/* Message 2: B->A  NonceB */
+/* Message 3: A->B  {msg3(NonceB)}KeyAS */
+/* Message 4: B->S  A, B, {msg3(NonceB)}KeyAS */
+/* Message 5: S->B  {msg5(A, NonceB)}KeyBS */
+/* Event 2: B ends "A,B" */
+
+(new keyA)
+(new keyB)
+(news db)
+(news sender)
+(news receiver)
+(
+ (*net?m4.   /*** server ***/
+   split m4 is (a, m4snd) in
+   split m4snd is (b2, ct) in
+   db??x.
+   match x is (a, kA) in
+   db??y.
+   match y is (b2, kB) in
+   decrypt ct is {m3}kA in
+    case m3 is inl(w). 
+            (match w is (b2,n2) in
+             net!{inr((a,n2))}kB)
+            is inr(d).O
+  )
+|*sender??x.   /*** sender ***/
+   split x is (a, ks) in
+   net?b.
+   begin (a,b).   
+   (net!a
+    |net?nonce.
+     net!{inl((b,nonce))}ks)
+|(*receiver??x.   /*** receiver ***/
+   split x is (b, kr) in
+   net?a.        
+    (new nonce)
+    (net!nonce
+     | net?ctext.
+       (net!(a,(b,ctext))
+        | net?msg5.
+          decrypt msg5 is {x}kr in
+          case x is inl(dummy).O 
+                 is inr(y).(match y is (a,nonce2) in
+                            check nonce is nonce2 in
+                            end (a,b)))))
+|*(new p)(newSym keyP)  /*** infinitely participants of the protocol ***/
+   (*net!p |
+    *db!!(p,keyP) | 
+    *sender!!(p,keyP) | 
+    *receiver!!(p, keyP))
+)

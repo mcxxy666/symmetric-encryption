@@ -1,0 +1,2 @@
+/*** ill-typed process ***/
+(new x)(newSym k)(begin x.net!{x}k | net?y.decrypt y is {z}k in check x is z in end z)

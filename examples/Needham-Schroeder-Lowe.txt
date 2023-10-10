@@ -1,0 +1,45 @@
+/* Needham-Schroeder-Lowe */
+
+/* Message 1: A -> S   (a,b) */
+/* Message 2: S -> A   {{(b,(Kb,Kb2))}}Ks-1 */
+/* Event 1: A begins   "a contacting b" */
+/* Message 3: A -> B   {{(a,nonceA)}}Kb */
+/* Event 2: B begins   "b contacted by a" */
+/* Message 4: B -> S   (b,a) */
+/* Message 5: S -> B   {{(a,Ka)}}Ks2-1 */
+/* Message 6: B -> A   {{(b,(nonceA,nonceB))}}Ka */
+/* Event 3: A ends     "b contacted by a" */
+/* Message 7: A -> B   {{nonceB}}Kb2 */
+/* Event 4: B ends     "a contacting b"*/
+
+
+
+(newAsym ek_S,dk_S)(newAsym ek_S2,dk_S2)(newAsym ek_B,dk_B)(newAsym ek_B2,dk_B2)(newAsym ek_A,dk_A)
+(
+(  /* the process of S */
+   (
+    net!(dk_S,dk_S2)|
+net?rcv.split rcv is (a,b) in (net!{{(b,(ek_B,ek_B2))}}ek_S|
+       net?rcv2.split rcv2 is (b,a) in net!{{(a,ek_A)}}ek_S2))   
+
+ 
+  |
+   /* the process of A */
+
+    (new nonceA)(net!(a,b)| net?ctext.decrypt ctext is {{text0}}dk_S in 
+         match text0 is (b,text1) in split text1 is (ek_B,ek_B2) in 
+       (net!{{(a,nonceA)}}ek_B|net?ctext3.decrypt ctext3 is {{text5}}dk_A in 
+                match text5 is (b,text6) in split text6 is (nonceA2,nonceB2) in 
+                   (check nonceA is nonceA2 in end (b,a) | begin (a,b).net!{{nonceB2}}ek_B2)))
+)
+ |
+   /* the process of B */
+
+
+    (new nonceB)net?ctext2.decrypt ctext2 is {{text}}dk_B in 
+      match text is (a,nonceA2) in (net!(b,a) | 
+        net?ctext4.decrypt ctext4 is {{text2}}dk_S2 in match text2 is (a,ek_A) in           
+  (begin (b,a).net!{{(b,(nonceA2,nonceB))}}ek_A|net?ctext5.decrypt ctext5 is {{nonceB2}}dk_B2             
+   in check nonceB is nonceB2 in end (a,b)))
+
+)

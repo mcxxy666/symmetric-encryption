@@ -1,0 +1,110 @@
+/* Needham-Schroeder-Lowe */
+
+/* Message 1: A -> S   (a,b) */
+/* Message 2: S -> A   {{msg1(b,Kb)}}Ks-1 */
+/* Event 1: A begins   "a contacting b" */
+/* Message 3: A -> B   {{msg2(a,nonceA)}}Kb */
+/* Event 2: B begins   "b contacted by a" */
+/* Message 4: B -> S   (b,a) */
+/* Message 5: S -> B   {{msg3(a,Ka)}}Ks-1 */
+/* Message 6: B -> A   {{msg4(b,(nonceA,nonceB))}}Ka */
+/* Event 3: A ends     "b contacted by a" */
+/* Message 7: A -> B   {{msg5(nonceB)}}Kb */
+/* Event 4: B ends     "a contacting b"*/
+
+
+(news chS)(news db)(news chA)(news chB)
+(
+
+    /* certificate authority S */
+  
+    *chS??smsg.
+     split smsg is (s,ek_s) in
+     net?rcv.
+     split rcv is (x,y) in 
+     db??cmsg0.
+     match cmsg0 is (y,eky) in
+     net!{{(y,eky)}}ek_s 
+         
+
+  |
+
+    /* the process of A */
+
+    *chA??cmsg.
+     split cmsg is (a,cmsg2) in
+     split cmsg2 is (dk_S,dk_a) in
+     net?b.
+     (new nonceA)
+     (net!(a,b) | 
+      net?ctext.
+      decrypt ctext is {{text0}}dk_S in 
+      match text0 is (b,ek_b) in 
+      (net!{{inl(inl((a,nonceA)))}}ek_b |
+       net?ctext3.
+       decrypt ctext3 is {{text1}}dk_a in 
+       case text1 is inl(d).O
+                  is inr(text2).
+                     (match text2 is (b,text3) in 
+                      split text3 is (nonceA2,nonceB2) in 
+                      (check nonceA is nonceA2 in end (b,a) | 
+                       begin (a,b).net!{{inl(inr(nonceB2))}}ek_b)
+                      )
+       )
+           
+                 
+      )   
+  |
+  
+    /* the process of B */
+
+    *chB??cmsg3.
+     split cmsg3 is (b,cmsg4) in
+     split cmsg4 is (dk_S,dk_b) in
+     (new nonceB)
+      net?ctext2.
+      decrypt ctext2 is {{text4}}dk_b in 
+      case text4 is inl(text5).
+            (case text5 is inl(text6).
+                  (split text6 is (a,nonceA2) in 
+                   (net!(b,a) | 
+                    net?ctext4.
+                    decrypt ctext4 is {{text7}}dk_S in 
+                    match text7 is (a,ek_a) in          
+                    begin (b,a).
+                    net!{{inr((b,(nonceA2,nonceB)))}}ek_a |
+                    net?ctext5.
+                    decrypt ctext5 is {{text8}}dk_b in 
+                    case text8 is inl(text9).
+                                (case text9 is inl(f).O
+                                            is inr(nonceB2).
+                                            (check nonceB is nonceB2 in 
+                                             end (a,b))
+
+                                 )
+                                is inr(e).O
+                                 
+                      )
+                     )
+                         is inr(d).O     
+                   
+               ) 
+                 is inr(dummy).O    
+
+    |
+
+
+    /*   infinitely participants of the protocol */
+   *(new p)(newAsym eks,dks)(newAsym ekp,dkp)
+    (*net!p |
+     *net!dks |
+     *chS!!(p,eks) |
+     *db!!(p,ekp) |
+     *chA!!(p,(dks,dkp)) |
+     *chB!!(p,(dks,dkp))
+     )
+  
+
+      
+     
+)

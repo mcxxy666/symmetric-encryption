@@ -1,0 +1,13 @@
+/* soph */
+
+/* Message 1: A->B  {{(msg,nonce)}}pk_Bob */
+/* Event 1: B begins "msg" */
+/* Message 2: B->A  nonce */
+/* Event 2: A ends "msg" */
+
+(newAsym pk_Bob,sk_Bob)
+(net!pk_Bob|
+ (
+  (new msg)(new nonce)(net!{{(msg,nonce)}}pk_Bob|(net?nonce2.check nonce is nonce2 in end msg)))
+|
+( net?ctext.decrypt ctext is {{text}}sk_Bob in split text is (m,nonce2) in begin m . net!nonce2))

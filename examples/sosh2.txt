@@ -1,0 +1,20 @@
+/* sosh2 */
+
+/* Message 1: A->B  {{nonce}}pk_Bob */
+/* Event 1: B begins "msg" */
+/* Message 2: B->A {{ (msg,nonce) }}pk_Alice */
+/* Event 2: A ends "msg" */
+
+(newAsym pk_Bob,sk_Bob)(newAsym pk_Alice,sk_Alice)
+((net!pk_Bob|net!pk_Alice) 
+|
+( 
+  ((new nonce) 
+       (net!{{nonce}}pk_Bob | net?ctext2.    
+            decrypt ctext2 is {{text2}}sk_Alice in 
+                   split text2 is (m,nonce2) in  
+                   check nonce is nonce2 in end m ))
+ |(net?ctext1.(new msg)(decrypt ctext1 is {{nonce2}}sk_Bob 
+    in begin msg.net!{{(msg,nonce2)}}pk_Alice))
+)
+)

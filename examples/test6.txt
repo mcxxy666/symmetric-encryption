@@ -1,0 +1,9 @@
+(new x)
+(newSym k)
+(news c)
+  (c!!k
+   |
+    c??u.begin x.net!{x}u
+   |
+   net?y.decrypt y is {z}k in check x is z in end x)
+

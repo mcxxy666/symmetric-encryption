@@ -1,0 +1,170 @@
+/* Needham-Schroeder-Lowe for three-party authentication */
+
+
+/* Message 1: R0 -> R1: {{R0, R2, n0}}pk1 */  
+
+/* Event 1: R1 begins (R0,R1,R2,01) */
+/* Event 2: R1 begins (R0,R1,R2,21) */
+
+/* Message 2: R1 -> R2: {{R0,R1,n0,n1}}pk2 */ 
+
+/* Event 3: R2 begins (R0,R1,R2,02) */
+/* Event 4: R2 begins (R0,R1,R2,12) */
+
+/* Message 3: R2 -> R0: {{R1,R2,n0,n1,n2}}pk0 */ 
+
+/* Event 5: R0 begins (R0,R1,R2,01) */
+/* Event 6: R0 begins (R0,R1,R2,02) */
+/* Event 7: R0 ends (R0,R1,R2,10) */ 
+/* Event 8: R0 ends (R0,R1,R2,20) */ 
+
+/* Message 4: R0 -> R1: {{n1,n2}}pk1 */ 
+
+/* Event 9: R1 ends (R0,R1,R2,10) */ 
+/* Event 10: R1 ends (R0,R1,R2,12) */ 
+
+
+/* Message 5: R1 -> R2: {{n2}}pk2 */ 
+
+/* Event 11: R2 ends (R0,R1,R2,20) */ 
+/* Event 12: R2 ends (R0,R1,R2,21) */ 
+
+
+(news db)(news role0)(news role1)(news role2)
+(
+   /* the process of R0 */
+
+ *role0??cmsg0.
+  split cmsg0 is (r0,sk0) in
+  net?r1.
+  db??cmsg.
+  match cmsg is (r1,pk1) in
+  net?r2. 
+  (new n0)
+  (net!{{inl(inl((r0,(r2,n0))))}}pk1  |
+   net?ctext.
+   decrypt ctext is {{text}}sk0 in
+   case text is inl(a).O
+             is inr(text0).
+             (case text0 is inl(b).O
+                         is inr(text1).
+                         match text1 is (r1,text2) in
+                         match text2 is (r2,text3) in
+                         split text3 is (n0',text4) in
+                         split text4 is (n1,n2) in
+                         check n0 is n0' in 
+                        (end (r0,(r1,(r2,c01))) |
+                         end (r0,(r1,(r2,c02))) | 
+                         begin (r0,(r1,(r2,c10))).
+                         begin (r0,(r1,(r2,c20))).
+                         net!{{inl(inr((n1,n2)))}}pk1)
+             )
+
+
+  )
+  
+ |
+
+    /* the process of R1 */
+   
+   *role1??cmsg1.
+    split cmsg1 is (r1,sk1) in
+    (new n1)
+    net?ctext0.
+    decrypt ctext0 is {{text5}}sk1 in
+    case text5 is inl(text6).
+               (case text6 is inl(text7).      
+                           (split text7 is (r0,text8) in
+                            split text8 is (r2,n0) in
+                            db??cmsg2.
+                            match cmsg2 is (r2,pk2) in 
+                            begin (r0,(r1,(r2,c01))).
+                            begin (r0,(r1,(r2,c21))).
+                            (net!{{inr(inl(inl((r0,(r1,(n0,n1))))))}}pk2 |
+                             net?ctext1.
+                             decrypt ctext1 is {{text9}}sk1 in
+                             case text9 is inl(text10).
+                                        (case text10 is inl(f).O
+                                                     is inr(text11).
+                                                 (split text11 is (n1',n2) in
+                                                       (check n1 is n1' in
+                                                        (end (r0,(r1,(r2,c10))) |
+                                                         end (r0,(r1,(r2,c12))))| 
+                                                         net!{{inr(inl(inr(n2)))}}pk2
+                                                          )
+                                                         )
+                                         )
+                                        is inr(e).O
+                  
+                             )
+                         
+                                       
+                            )
+                           is inr(d).O
+                )
+                is inr(c).O
+    
+
+   |
+
+       /* the process of R2 */
+   
+   *role2??cmsg3.
+    split cmsg3 is (r2,sk2) in
+    (new n2)
+    net?ctext2.
+    decrypt ctext2 is {{tex}}sk2 in
+    case tex is inl(g).O
+             is inr(tex0).
+             (case tex0 is inl(tex1).
+                        (case tex1 is inl(tex2).
+                                   (split tex2 is (r0,tex3) in
+                                    split tex3 is (r1,tex4) in
+                                    split tex4 is (n0,n1) in
+                                    db??cmsg4.
+                                    match cmsg4 is (r0,pk0) in
+                                    (begin (r0,(r1,(r2,c02))).
+                                     begin (r0,(r1,(r2,c12))).
+                                     net!{{inr(inr((r1,(r2,(n0,(n1,n2))))))}}pk0 |
+                                     net?ctext3.
+                                     decrypt ctext3 is {{tex5}}sk2 in
+                                     case tex5 is inl(j).O
+                                               is inr(tex6).
+                                               (case tex6 is inl(tex7).
+                                                          (case tex7 is inl(l).O
+                                                                     is inr(n2').
+                                                                     (check n2 is n2' in
+                                                                     (end (r0,(r1,(r2,c20))) | 
+                                                                      end (r0,(r1,(r2,c21))) 
+                                                                       )                                                                      
+                                                                      )
+                                                           )
+                                                          is inr(k).O
+                                                )
+
+                                     )
+  
+                                    )
+                                   is inr(i).O
+                         )
+                        is inr(h).O
+
+
+              )
+    
+
+
+   |
+
+     *(new p)(newAsym pk,sk)
+      (*net!p |
+       *net!pk |
+       *db!!(p,pk) |
+       *role0!!(p,sk) |
+       *role1!!(p,sk) |
+       *role2!!(p,sk)
+       )
+
+
+
+)

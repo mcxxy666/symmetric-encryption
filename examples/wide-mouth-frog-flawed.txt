@@ -1,0 +1,68 @@
+/* Flawed Wide Mouth Frog protocol (that may suffer from type attack) */
+
+/* Event 1: A begins "A,B,KeyAB" */
+/* Message 1: A->S  A */
+/* Message 2: S->A  NonceS */
+/* Message 3: A->S  A,{B,KeyAB,NonceS}KeyAS */
+/* Message 4: S->B  () */
+/* Message 5: B->S  NonceB */
+/* Message 6: S->B  {A,KeyAB,NonceB}KeyBS */
+/* Event 2: B ends "A,B,KeyAB" */
+
+(news db)
+(news sender)
+(news receiver)
+( 
+  /* Server */
+ *(net?a.
+    (new nonceA)
+    (net!nonceA
+    | net?msg2.
+      match msg2 is (a,ctext) in
+      db??x.
+      match x is (a, keyA) in
+      decrypt ctext is {msg3}keyA in
+      split msg3 is (b,msg32) in
+      split msg32 is (keyAB,nonceA2) in
+      check nonceA is nonceA2 in
+      (net!()
+      |net?nonB.
+       db??y.
+       match x is (b, keyB) in
+       net!{(a,(keyAB,nonB))}keyB
+      )
+    )
+   )
+|
+ /* Sender */
+ *(sender??x.
+   split x is (a, key) in
+   net?b.
+  (newSym skey)
+    begin (a,(b,skey)).
+    (net!a
+    |net?non.
+     net!(a,{(b,(skey,non))}key)
+    )
+   )
+|
+ /* Receiver */
+ *(receiver??x.
+   split x is (b, key) in
+   net?dummy.
+    (new nonce)
+    (net!nonce
+    |net?ct.
+     decrypt ct is {msg4}key in
+     split msg4 is (a,msg42) in
+     split msg42 is (skey,nonce2) in
+     check nonce is nonce2 in
+     end (a,(b,skey))
+    )
+   )
+|*(new p)(newSym keyP)  /*** infinitely participants of the protocol ***/
+   (*net!p |
+    *db!!(p,keyP) | 
+    *sender!!(p,keyP) | 
+    *receiver!!(p,keyP))
+)

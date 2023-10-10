@@ -1,0 +1,21 @@
+/* simple nonce handshake protocols */
+
+(newSym key)
+(*(ch?n.   /*** Alice ***/
+     (new msg)
+      begin msg.
+      ch!{(msg,n)}key.
+      assert(x = 3).
+      end m
+   )
+ |
+ *(new non)  /*** Bob ***/
+    (ch!non
+     |
+     ch?ctext.
+     decrypt ctext is {x}key in
+     split x is (m,non2) in
+     check non is non2 in
+     end m)
+)
+

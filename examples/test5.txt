@@ -1,0 +1,3 @@
+/* flawed simple nonce handshake protocols (begin is missing) */
+(newSym key)((ch?n.(new msg)/***begin msg.***/ch!{(msg,n)}key)
+  |(new non)(ch!non | ch?ctext.decrypt ctext is {x}key in split x is (m,non2) in check non is non2 in end m))
