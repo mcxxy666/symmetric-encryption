@@ -58,7 +58,7 @@ type stype = TUnit			(*** () ***)
 (*** types with effects ***)
 type eid = int
 type etype = ETUnit 
-	   | ETName of pp * effect * effect
+	   | ETName of pp * effect 
 	   | ETPair of etype * etype 
 	   | ETVari of etype * etype  
 	   | ETSKey of etype
@@ -104,7 +104,7 @@ let rec map_proc (f:'a -> 'b) (p: 'a procexp): 'b procexp = match p with
     
 let rec map_etype (f: effect -> effect) t = match t with
     ETUnit -> ETUnit
-  | ETName(l,e1,e2) -> ETName(l,f e1,f e2)
+  | ETName(l,e1) -> ETName(l,f e1)
   | ETPair(t1,t2) -> ETPair(map_etype f t1, map_etype f t2)
   | ETVari(t1,t2) -> ETVari(map_etype f t1, map_etype f t2)
   | ETSKey(t1) -> ETSKey(map_etype f t1)
