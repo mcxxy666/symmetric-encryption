@@ -104,7 +104,7 @@ let main () =
 	Solve.Unsatisfiable -> (print_string "The process is ill-typed.\n"; exit(-1))
       | Reduce.Unsatisfiable -> (print_string "The process is ill-typed.\n"; exit(-1))
       | Stype.Stype_failure _ -> (print_string "The process is not simply-typed.\n"; exit(-1))
-      | Einf.TypeError _ -> (print_string "The process is not simply-typed.\n"; exit(-1))
+      | Einf.TypeError _ -> (print_string "The process is not effect-typed.\n"; exit(-1))
    (***   | _ -> (print_string "Fatal error: please send a bug report\n"; exit(-1)) ***) in
    Pprint.pp_proc (Some Pprint.print_etype) proc; print_string "\n";;
 
